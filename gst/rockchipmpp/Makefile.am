@@ -3,6 +3,7 @@ plugin_LTLIBRARIES = libgstrockchipmpp.la
 libgstrockchipmpp_la_SOURCES =			\
 	gstmppenc.c			\
 	gstmpph264enc.c				\
+	gstmpph265enc.c				\
 	gstmppjpegenc.c				\
 	gstmppvp8enc.c				\
 	gstmppallocator.c			\
@@ -43,6 +44,7 @@ libgstrockchipmpp_la_LIBTOOLFLAGS =		\
 noinst_HEADERS =				\
 	gstmppenc.h			\
 	gstmpph264enc.h				\
+	gstmpph265enc.h				\
 	gstmppjpegenc.h				\
 	gstmppvp8enc.h				\
 	gstmppallocator.h			\
