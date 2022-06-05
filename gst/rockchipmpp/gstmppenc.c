@@ -97,6 +97,7 @@ enum
   PROP_WIDTH,
   PROP_HEIGHT,
   PROP_ZERO_COPY_PKT,
+  PROP_FORCE_KEYFRAME,
   PROP_LAST,
 };
 
@@ -279,6 +280,10 @@ gst_mpp_enc_set_property (GObject * object,
       self->zero_copy_pkt = g_value_get_boolean (value);
       return;
     }
+    case PROP_FORCE_KEYFRAME:{
+      self->force_keyframe = g_value_get_boolean (value);
+      return;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       return;
@@ -330,6 +335,9 @@ gst_mpp_enc_get_property (GObject * object,
       break;
     case PROP_ZERO_COPY_PKT:
       g_value_set_boolean (value, self->zero_copy_pkt);
+      break;
+    case PROP_FORCE_KEYFRAME:
+      g_value_set_boolean (value, self->force_keyframe);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -872,7 +880,7 @@ gst_mpp_enc_loop (GstVideoEncoder * encoder)
   mframe = self->mpp_frame;
   mpp_frame_set_buffer (mframe, mbuf);
 
-  keyframe = GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame);
+  keyframe = GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame) || self->force_keyframe;
   if (keyframe)
     gst_mpp_enc_force_keyframe (encoder, TRUE);
 
@@ -884,6 +892,9 @@ gst_mpp_enc_loop (GstVideoEncoder * encoder)
 
   if (keyframe)
     gst_mpp_enc_force_keyframe (encoder, FALSE);
+
+  if (self->force_keyframe)
+    self->force_keyframe = FALSE;
 
   if (!mpkt)
     goto error;
@@ -1047,6 +1058,7 @@ gst_mpp_enc_init (GstMppEnc * self)
   self->bps_max = DEFAULT_PROP_BPS_MAX;
   self->zero_copy_pkt = DEFAULT_PROP_ZERO_COPY_PKT;
   self->prop_dirty = TRUE;
+  self->force_keyframe = FALSE;
 }
 
 #define GST_TYPE_MPP_ENC_HEADER_MODE (gst_mpp_enc_header_mode_get_type ())
@@ -1216,6 +1228,11 @@ gst_mpp_enc_class_init (GstMppEncClass * klass)
   g_object_class_install_property (gobject_class, PROP_ZERO_COPY_PKT,
       g_param_spec_boolean ("zero-copy-pkt", "Zero-copy encoded packet",
           "Zero-copy encoded packet", DEFAULT_PROP_ZERO_COPY_PKT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_FORCE_KEYFRAME,
+      g_param_spec_boolean ("force-keyframe", "Force a key frame (auto reset)",
+          "Force a key frame (auto reset)", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_mpp_enc_change_state);

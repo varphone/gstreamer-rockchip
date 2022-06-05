@@ -80,6 +80,8 @@ struct _GstMppEnc
 
   gboolean prop_dirty;
 
+  gboolean force_keyframe;
+
   MppEncCfg mpp_cfg;
   MppFrame mpp_frame;
 
